@@ -1,0 +1,43 @@
+# CLAUDE.md — Home Psychiatrist API
+
+## Project Overview
+<!-- Fill this in -->
+This is a REST API for a funny retro AI psychiatrist, built with Express, TypeScript, and Google Gemini.
+Think 80s home computer "therapy" programs — but powered by a real LLM.
+
+## Key Commands
+- `npm run dev` — Start dev server with hot reload
+- `npm run test` — Run tests with Vitest
+- `npm run lint` — Type-check with TypeScript
+
+## Coding Standards
+- Use TypeScript strict mode — no `any` types
+- Use Express Router for route organization
+- Use interfaces for all request/response shapes
+- Gemini API calls go through `gemini-service.ts` — never call the SDK directly from routes or business logic
+- <!-- Add your own rule -->
+- <!-- Add your own rule -->
+
+## API Conventions
+- All endpoints return JSON
+- Success responses use format: `{ data: T }`
+- Error responses use format: `{ error: string }`
+- POST returns 201 on resource creation
+
+## Testing Requirements
+- Use Vitest for all tests
+- Test files: `*.test.ts` next to source files
+- Test the service layer (business logic), not Express routes directly
+- **Always mock the Gemini service** — never make real API calls in tests
+
+## Environment Variables
+- `OLLAMA_HOST` — Ollama server URL (default: `http://127.0.0.1:11434`)
+- `OLLAMA_MODEL` — Model to use (default: `gemma3`)
+- `PORT` — Server port (default: 3000)
+
+## Do NOT
+- Use `any` type
+- Make real Ollama API calls in tests — always mock the LLMClient interface
+- Skip error handling on route handlers
+- Hardcode the model name or host URL — always use environment variables
+- <!-- Add your own guardrail -->

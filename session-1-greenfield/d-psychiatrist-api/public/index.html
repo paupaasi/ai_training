@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HOME PSYCHIATRIST v1.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    /* ── RESET ─────────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black:    #0a0a0a;
+      --dark:     #001100;
+      --green:    #00ff41;
+      --cyan:     #00ffff;
+      --pink:     #ff00ff;
+      --amber:    #ffb000;
+      --error:    #ff2200;
+      --white:    #ccffcc;
+      --pixel:    'Press Start 2P', monospace;
+      --mono:     'Courier New', Courier, monospace;
+    }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: var(--black);
+      color: var(--green);
+      font-family: var(--pixel);
+      font-size: 10px;
+      overflow-x: hidden;
+    }
+
+    /* CRT scanlines overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.18) 2px,
+        rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* CRT vignette */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 9997;
+    }
+
+    /* Glow effect */
+    .glow { text-shadow: 0 0 8px currentColor, 0 0 18px currentColor; }
+
+    /* ── LAYOUT ────────────────────────────────────────────────────────────── */
+    .screen {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 20px 16px;
+    }
+    .screen.active { display: flex; }
+
+    /* ── HEADER ────────────────────────────────────────────────────────────── */
+    .hdr {
+      border: 2px solid var(--green);
+      padding: 14px 16px;
+      background: var(--dark);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .hdr-title {
+      font-size: 10px;
+      color: var(--cyan);
+      letter-spacing: 2px;
+      line-height: 2;
+    }
+    .hdr-sub {
+      font-size: 7px;
+      color: var(--pink);
+      margin-top: 6px;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink  { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* ── PERSONALITY PICKER ────────────────────────────────────────────────── */
+    .picker-warning {
+      text-align: center;
+      font-size: 6px;
+      color: var(--amber);
+      margin-bottom: 20px;
+      line-height: 2;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      flex: 1;
+    }
+    .p-card {
+      border: 2px solid var(--pink);
+      background: var(--dark);
+      padding: 16px 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      transition: border-color .1s, background .1s;
+    }
+    .p-card:hover    { border-color: var(--cyan); background: #001800; }
+    .p-card:focus    { outline: 2px solid var(--cyan); }
+
+    .card-name  { font-size: 7px; color: var(--cyan); text-align: center; letter-spacing:1px; }
+    .card-tagline { font-size: 6px; color: var(--pink); text-align: center; letter-spacing:1px; font-style: italic; }
+    .card-ascii {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--green);
+      white-space: pre;
+      text-align: center;
+      line-height: 1.4;
+      border: 1px solid #003300;
+      padding: 8px 14px;
+      background: #000800;
+    }
+    .card-desc { font-size: 6px; color: var(--white); text-align: center; line-height: 1.9; }
+    .sel-btn {
+      font-family: var(--pixel);
+      font-size: 7px;
+      background: var(--pink);
+      color: var(--black);
+      border: none;
+      padding: 8px 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      margin-top: auto;
+    }
+    .sel-btn:hover { background: var(--cyan); }
+
+    /* ── CHAT SCREEN ───────────────────────────────────────────────────────── */
+    .chat-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 2px solid var(--green);
+      padding: 9px 14px;
+      background: var(--dark);
+      margin-bottom: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chat-session-info { font-size: 6px; line-height: 2; }
+    .chat-session-info .lbl { color: var(--green); }
+    .chat-session-info .val-amber { color: var(--amber); }
+    .chat-session-info .val-cyan  { color: var(--cyan); }
+
+    .chat-window {
+      flex: 1;
+      border: 2px solid var(--green);
+      background: var(--dark);
+      padding: 14px;
+      overflow-y: auto;
+      font-family: var(--mono);
+      font-size: 14px;
+      line-height: 1.8;
+      min-height: 280px;
+      max-height: 420px;
+    }
+    .chat-window::-webkit-scrollbar       { width: 6px; }
+    .chat-window::-webkit-scrollbar-track { background: #001100; }
+    .chat-window::-webkit-scrollbar-thumb { background: var(--green); }
+
+    .msg { margin-bottom: 10px; }
+    .msg-role {
+      font-family: var(--pixel);
+      font-size: 6px;
+      display: inline;
+    }
+    .msg-role.user         { color: var(--cyan); }
+    .msg-role.psychiatrist { color: var(--amber); }
+    .msg-content { color: var(--white); display: inline; margin-left: 6px; }
+
+    .processing {
+      font-family: var(--pixel);
+      font-size: 7px;
+      color: var(--pink);
+      padding: 8px 0;
+      animation: pulse .7s ease-in-out infinite;
+    }
+
+    .input-row {
+      margin-top: 10px;
+      border: 2px solid var(--green);
+      background: var(--dark);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .prompt-char { font-family: var(--mono); font-size: 18px; color: var(--green); }
+    .chat-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 14px;
+      caret-color: var(--green);
+    }
+    .chat-input::placeholder { color: #004400; }
+
+    .chat-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      justify-content: flex-end;
+    }
+
+    /* ── BUTTONS ───────────────────────────────────────────────────────────── */
+    .btn {
+      font-family: var(--pixel);
+      font-size: 6px;
+      padding: 8px 12px;
+      border: 2px solid var(--green);
+      background: var(--dark);
+      color: var(--green);
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+    .btn:hover:not(:disabled) { background: #001a00; border-color: var(--cyan); color: var(--cyan); }
+    .btn.accent { border-color: var(--pink); color: var(--pink); }
+    .btn.accent:hover:not(:disabled) { background: #1a0018; border-color: var(--cyan); color: var(--cyan); }
+    .btn:disabled { opacity: .38; cursor: not-allowed; }
+    .btn:focus    { outline: 2px solid var(--cyan); }
+
+    /* ── DIAGNOSIS SCREEN ──────────────────────────────────────────────────── */
+    .diag-cert {
+      border: 3px double var(--amber);
+      background: var(--dark);
+      padding: 28px 30px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .diag-hdr {
+      font-size: 8px;
+      color: var(--amber);
+      text-align: center;
+      line-height: 2.2;
+    }
+    .diag-rule {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--amber);
+      text-align: center;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .diag-body {
+      font-family: var(--mono);
+      font-size: 15px;
+      color: var(--white);
+      line-height: 1.9;
+      flex: 1;
+      min-height: 100px;
+    }
+    .diag-stamp {
+      font-size: 6px;
+      color: var(--green);
+      text-align: center;
+      line-height: 2.2;
+      border: 1px dashed var(--green);
+      padding: 10px;
+      opacity: 0;
+      transition: opacity .6s;
+    }
+    .diag-stamp.show { opacity: 1; }
+    .diag-actions {
+      text-align: center;
+      margin-top: 16px;
+      display: none;
+    }
+
+    /* ── ERROR BOX ─────────────────────────────────────────────────────────── */
+    .err-box {
+      display: none;
+      border: 2px solid var(--error);
+      background: #140000;
+      color: var(--error);
+      padding: 10px 14px;
+      font-size: 7px;
+      margin-top: 10px;
+      text-align: center;
+      line-height: 2;
+    }
+    .err-box.show { display: block; }
+
+    /* ── INITIAL LOADING SCREEN ────────────────────────────────────────────── */
+    #boot-screen {
+      position: fixed; inset: 0;
+      background: var(--black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      z-index: 1000;
+    }
+    #boot-screen h2 { font-size: 11px; color: var(--green); letter-spacing: 3px; }
+    #boot-screen p  {
+      font-size: 7px; color: var(--amber);
+      animation: blink .5s step-end infinite;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── BOOT SCREEN ─────────────────────────────────────────────────────────── -->
+<div id="boot-screen">
+  <h2 class="glow">HOME PSYCHIATRIST v1.0</h2>
+  <p>LOADING EMOTIONAL DATABASE...</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 1 — PERSONALITY PICKER                                             -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-picker" class="screen">
+  <div class="hdr">
+    <div class="hdr-title glow">
+      ╔══════════════════════════════╗<br>
+      ║ * HOME PSYCHIATRIST v1.0 *  ║<br>
+      ╚══════════════════════════════╝
+    </div>
+    <div class="hdr-sub">▶▶ SELECT YOUR THERAPIST AND PRESS START ◀◀</div>
+  </div>
+  <p class="picker-warning">
+    ⚠ WARNING: NOT REAL THERAPY ⚠<br>
+    DO NOT SUBSTITUTE FOR ACTUAL MEDICAL ADVICE. COIN-OP THERAPY SINCE 1985.
+  </p>
+  <div id="card-grid" class="card-grid"><!-- injected by JS --></div>
+  <div id="picker-error" class="err-box"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 2 — CHAT TERMINAL                                                  -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-chat" class="screen">
+  <div class="chat-topbar">
+    <div class="chat-session-info">
+      <span class="lbl">SESSION: </span><span id="disp-session" class="val-amber">---</span>
+      &nbsp;&nbsp;
+      <span class="lbl">THERAPIST: </span><span id="disp-personality" class="val-cyan">---</span>
+    </div>
+    <div>
+      <button class="btn" id="btn-change">CHANGE THERAPIST</button>
+    </div>
+  </div>
+
+  <div id="chat-window" class="chat-window" role="log" aria-live="polite"></div>
+
+  <div class="input-row">
+    <span class="prompt-char" aria-hidden="true">&gt;</span>
+    <input
+      type="text"
+      id="chat-input"
+      class="chat-input"
+      placeholder="TELL THE DOCTOR EVERYTHING..."
+      autocomplete="off"
+      aria-label="Message input"
+    />
+  </div>
+
+  <div class="chat-btns">
+    <button class="btn" id="btn-send">[ SEND MESSAGE ]</button>
+    <button class="btn accent" id="btn-diagnosis">[ GET DIAGNOSIS ]</button>
+  </div>
+  <div id="chat-error" class="err-box"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- SCREEN 3 — DIAGNOSIS CERTIFICATE                                          -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div id="screen-diagnosis" class="screen">
+  <div class="diag-cert">
+    <div class="diag-hdr glow">
+      ╔══════════════════════════════════════════╗<br>
+      ║  *** OFFICIAL DIAGNOSIS CERTIFICATE ***  ║<br>
+      ╠══════════════════════════════════════════╣<br>
+      <span id="diag-clinic-name" style="color:var(--pink)">DR-MIND 8000 CLINICS</span>
+    </div>
+    <div class="diag-rule" aria-hidden="true">████████████████████████████████████████████████████████</div>
+    <div id="diag-body" class="diag-body" role="status" aria-live="polite"></div>
+    <div class="diag-rule" aria-hidden="true">████████████████████████████████████████████████████████</div>
+    <div class="diag-stamp" id="diag-stamp">
+      CERTIFIED BY <span id="diag-doctor-label">DR-MIND 8000</span><br>
+      STAMP: ░░ CLINICALLY UNUSUAL ░░<br>
+      ⚠ THIS IS NOT A REAL DIAGNOSIS ⚠
+    </div>
+    <div id="diag-error" class="err-box"></div>
+  </div>
+  <div class="diag-actions" id="diag-actions">
+    <button class="btn accent" id="btn-new-session">[ START NEW SESSION ]</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- SCRIPT                                                                    -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<script>
+  'use strict';
+
+  // ── STATE ─────────────────────────────────────────────────────────────────
+  let sessionId          = null;
+  let selectedPersonality = null; // { id, name }
+  let isBusy             = false;
+
+  // ── ASCII ART (keyed by personality id) ───────────────────────────────────
+  const ASCII = {
+    default:     `  .---.
+ (o . o)
+  |=|=|
+ /|   |\\
+DR-8000`,
+    freudian:    `  .---.
+ (ô _ ô)
+  }={ 
+ /| | |\\
+KLUDGE`,
+    newage:      `  *·.·*
+ (✿‿✿)
+  )|(
+ / ✨ \\
+CRYSTAL`,
+    conspiracy:  `  /^\\
+ (>_> )
+  ]=[ 
+ /|_|\\
+TINFOIL`,
+  };
+
+  // ── SCREEN MANAGEMENT ─────────────────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ── ERROR HELPERS ─────────────────────────────────────────────────────────
+  function showErr(elId, msg) {
+    const el = document.getElementById(elId);
+    // XSS-safe: textContent only
+    el.textContent = '!!! ' + msg + ' !!!';
+    el.classList.add('show');
+  }
+  function clearErr(elId) {
+    const el = document.getElementById(elId);
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+
+  // ── PERSONALITY PICKER ────────────────────────────────────────────────────
+  async function loadPersonalities() {
+    clearErr('picker-error');
+    try {
+      const res = await fetch('/personalities');
+      if (!res.ok) throw new Error('SERVER ERROR ' + res.status);
+      const json = await res.json();
+      renderCards(json.data);
+    } catch (err) {
+      showErr('picker-error', 'SYSTEM ERROR: PERSONALITY DATABASE OFFLINE. CHECK OLLAMA IS RUNNING.');
+    }
+  }
+
+  function renderCards(personalities) {
+    const grid = document.getElementById('card-grid');
+    grid.innerHTML = '';
+    for (const p of personalities) {
+      const card = document.createElement('div');
+      card.className = 'p-card';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', 'Select ' + p.name);
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'card-name';
+      nameEl.textContent = p.name;           // XSS-safe
+
+      const taglineEl = document.createElement('div');
+      taglineEl.className = 'card-tagline';
+      taglineEl.textContent = p.tagline;     // XSS-safe
+
+      const asciiEl = document.createElement('pre');
+      asciiEl.className = 'card-ascii';
+      asciiEl.setAttribute('aria-hidden', 'true');
+      asciiEl.textContent = ASCII[p.id] || '(?_?)'; // XSS-safe
+
+      const descEl = document.createElement('div');
+      descEl.className = 'card-desc';
+      descEl.textContent = p.description;    // XSS-safe
+
+      const btn = document.createElement('button');
+      btn.className = 'sel-btn';
+      btn.textContent = '[ SELECT ]';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        beginSession(p.id, p.name);
+      });
+
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') beginSession(p.id, p.name);
+      });
+
+      card.append(nameEl, taglineEl, asciiEl, descEl, btn);
+      grid.appendChild(card);
+    }
+  }
+
+  // ── START SESSION ─────────────────────────────────────────────────────────
+  async function beginSession(personalityId, personalityName) {
+    if (isBusy) return;
+    isBusy = true;
+    clearErr('picker-error');
+
+    // Show inline loading while keeping layout stable
+    const grid = document.getElementById('card-grid');
+    const prev = grid.innerHTML;
+    const loader = document.createElement('div');
+    loader.className = 'processing';
+    loader.style.cssText = 'grid-column:1/-1;text-align:center;padding:40px';
+    loader.textContent = 'CONNECTING TO THERAPIST... PLEASE WAIT...';
+    grid.innerHTML = '';
+    grid.appendChild(loader);
+
+    try {
+      const res = await fetch('/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personality: personalityId }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'SERVER ERROR ' + res.status);
+      }
+      const { data } = await res.json();
+      sessionId           = data.sessionId;
+      selectedPersonality = { id: personalityId, name: personalityName };
+      enterChat(data.greeting);
+    } catch (err) {
+      grid.innerHTML = prev; // restore cards
+      showErr('picker-error', 'SYSTEM ERROR: ' + (err.message || 'THERAPIST MODULE OFFLINE'));
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  // ── CHAT SCREEN ───────────────────────────────────────────────────────────
+  function enterChat(greeting) {
+    document.getElementById('disp-session').textContent =
+      sessionId.substring(0, 8).toUpperCase();
+    document.getElementById('disp-personality').textContent =
+      selectedPersonality.name.toUpperCase();
+    document.getElementById('chat-window').innerHTML = '';
+    clearErr('chat-error');
+    appendMsg('psychiatrist', greeting);
+    showScreen('screen-chat');
+    document.getElementById('chat-input').focus();
+  }
+
+  function appendMsg(role, content) {
+    const win = document.getElementById('chat-window');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg';
+
+    const roleEl = document.createElement('span');
+    roleEl.className = 'msg-role ' + role;
+    roleEl.textContent = role === 'user' ? 'YOU:' : 'DR:'; // static — not from API
+
+    const textEl = document.createElement('span');
+    textEl.className = 'msg-content';
+    textEl.textContent = content; // XSS-safe: textContent only
+
+    wrap.append(roleEl, textEl);
+    win.appendChild(wrap);
+    win.scrollTop = win.scrollHeight;
+  }
+
+  function showChatLoader(text) {
+    const win = document.getElementById('chat-window');
+    const el  = document.createElement('div');
+    el.className = 'processing';
+    el.id        = 'chat-loader';
+    el.textContent = text;
+    win.appendChild(el);
+    win.scrollTop = win.scrollHeight;
+  }
+  function removeChatLoader() {
+    document.getElementById('chat-loader')?.remove();
+  }
+
+  function setChatBusy(busy) {
+    document.getElementById('btn-send').disabled     = busy;
+    document.getElementById('btn-diagnosis').disabled = busy;
+    document.getElementById('chat-input').disabled   = busy;
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text  = input.value.trim();
+    if (!text || isBusy) return;
+
+    isBusy = true;
+    clearErr('chat-error');
+    input.value = '';
+    setChatBusy(true);
+    appendMsg('user', text);
+    showChatLoader('>>>>>  PROCESSING EMOTIONAL DATA  <<<<<');
+
+    try {
+      const res = await fetch('/sessions/' + sessionId + '/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text }),
+      });
+      removeChatLoader();
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'SERVER ERROR ' + res.status);
+      }
+      const { data } = await res.json();
+      appendMsg('psychiatrist', data.response);
+    } catch (err) {
+      removeChatLoader();
+      showErr('chat-error', 'SYSTEM ERROR: ' + (err.message || 'EMPATHY MODULE OFFLINE'));
+    } finally {
+      isBusy = false;
+      setChatBusy(false);
+      document.getElementById('chat-input').focus();
+    }
+  }
+
+  async function requestDiagnosis() {
+    if (isBusy) return;
+    isBusy = true;
+    clearErr('chat-error');
+    setChatBusy(true);
+    showChatLoader('>>>>>  GENERATING OFFICIAL DIAGNOSIS  <<<<<');
+
+    try {
+      const res = await fetch('/sessions/' + sessionId + '/diagnosis');
+      removeChatLoader();
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || 'SERVER ERROR ' + res.status);
+      }
+      const { data } = await res.json();
+      enterDiagnosis(data.diagnosis);
+    } catch (err) {
+      removeChatLoader();
+      showErr('chat-error', 'SYSTEM ERROR: ' + (err.message || 'DIAGNOSIS MODULE OFFLINE'));
+      setChatBusy(false);
+    } finally {
+      isBusy = false;
+    }
+  }
+
+  // ── DIAGNOSIS SCREEN ──────────────────────────────────────────────────────
+  function enterDiagnosis(text) {
+    const bodyEl    = document.getElementById('diag-body');
+    const stampEl   = document.getElementById('diag-stamp');
+    const actionsEl = document.getElementById('diag-actions');
+
+    bodyEl.textContent = '';
+    stampEl.classList.remove('show');
+    actionsEl.style.display = 'none';
+    clearErr('diag-error');
+
+    // Set clinic name (safe - from personality object, not API response)
+    document.getElementById('diag-clinic-name').textContent =
+      selectedPersonality.name.toUpperCase() + ' CLINICS';
+    document.getElementById('diag-doctor-label').textContent =
+      selectedPersonality.name.toUpperCase();
+
+    showScreen('screen-diagnosis');
+
+    // Typewriter animation — XSS-safe: textContent only
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i < text.length) {
+        bodyEl.textContent += text[i++];
+      } else {
+        clearInterval(timer);
+        stampEl.classList.add('show');
+        actionsEl.style.display = 'block';
+        document.getElementById('btn-new-session').focus();
+      }
+    }, 25);
+  }
+
+  // ── RESET TO PICKER ───────────────────────────────────────────────────────
+  function resetToPicker() {
+    sessionId           = null;
+    selectedPersonality = null;
+    isBusy              = false;
+    loadPersonalities();
+    showScreen('screen-picker');
+  }
+
+  // ── EVENT WIRING ──────────────────────────────────────────────────────────
+  document.getElementById('btn-send').addEventListener('click', sendMessage);
+  document.getElementById('chat-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+  document.getElementById('btn-diagnosis').addEventListener('click', requestDiagnosis);
+  document.getElementById('btn-change').addEventListener('click', resetToPicker);
+  document.getElementById('btn-new-session').addEventListener('click', resetToPicker);
+
+  // ── INIT ──────────────────────────────────────────────────────────────────
+  window.addEventListener('load', async () => {
+    await loadPersonalities();
+    document.getElementById('boot-screen').style.display = 'none';
+    showScreen('screen-picker');
+  });
+</script>
+</body>
+</html>
