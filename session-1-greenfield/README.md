@@ -28,6 +28,12 @@ A REST API for saving, tagging, and searching bookmarks.
 - **Feature 2:** GET /bookmarks?tag=X — search bookmarks by tag
 - **Folder:** `c-bookmark-api/`
 
+### D) Home Psychiatrist API (Node.js/TypeScript + Gemini)
+A funny retro AI psychiatrist REST API — like an 80s home computer therapy program, but powered by Gemini LLM.
+- **Feature 1:** POST /sessions + POST /sessions/:id/messages — start a therapy session and chat with the psychiatrist
+- **Feature 2:** GET /personalities + personality modes — switch between Freudian, new-age crystal healer, and conspiracy theorist
+- **Folder:** `d-psychiatrist-api/`
+
 ---
 
 ## Session Flow
