@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Selection Agent - Family Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        #resultsContainer {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-box input, .search-box select {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+
+        .search-box button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .search-box button:hover {
+            background: #5568d3;
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .activity-item {
+            border: 1px solid #eee;
+            border-radius: 6px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f9f9f9;
+        }
+
+        .activity-item:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .activity-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .activity-meta {
+            font-size: 0.9em;
+            color: #666;
+            display: flex;
+            gap: 15px;
+        }
+
+        .activity-category {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .profile-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .profile-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-item:last-child {
+            border-bottom: none;
+        }
+
+        .profile-label {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .profile-value {
+            color: #666;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .button-group button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #eee;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #ddd;
+        }
+
+        .btn-small {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            padding: 6px 10px;
+            transition: background 0.2s;
+        }
+
+        .btn-small:hover {
+            background: #5568d3;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .success {
+            background: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .rating-stars {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .star {
+            cursor: pointer;
+            color: #ddd;
+            margin-right: 5px;
+            transition: color 0.2s;
+        }
+
+        .star:hover,
+        .star.active {
+            color: #ffc107;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>👨‍👩‍👧‍👦 Activity Finder</h1>
+            <p class="subtitle">Find fun, age-appropriate activities for your family</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Left Sidebar: Profile & Controls -->
+            <div class="card">
+                <h2>👨‍👩‍👧‍👦 Family Profile</h2>
+                
+                <div class="profile-section" id="profileDisplay">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading profile...
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" onclick="openEditProfileModal()">Edit Profile</button>
+                    <button class="btn-secondary" onclick="loadStats()">📊 Stats</button>
+                </div>
+
+                <h2 style="margin-top: 30px;">🎯 Quick Actions</h2>
+                
+                <div class="button-group" style="flex-direction: column;">
+                    <button class="btn-primary" onclick="openRecommendationsModal()">Get Recommendations</button>
+                    <button class="btn-secondary" onclick="loadVisits()">View Visit History</button>
+                </div>
+            </div>
+
+            <!-- Right Content: Search & Chat -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <!-- Search Section -->
+                <div class="card">
+                    <h2>🔍 Search Activities (Structured)</h2>
+                    
+                    <div class="search-box">
+                        <input type="text" id="searchCity" placeholder="City (e.g., Vaasa, Barcelona)" value="Vaasa">
+                        <select id="searchCategory">
+                            <option value="">All Categories</option>
+                            <option value="playground">Playground</option>
+                            <option value="museum">Museum</option>
+                            <option value="zoo">Zoo</option>
+                            <option value="swimming">Swimming</option>
+                            <option value="nature">Nature</option>
+                            <option value="restaurant">Restaurant</option>
+                            <option value="park">Park</option>
+                            <option value="indoor_play">Indoor Play</option>
+                            <option value="library">Library</option>
+                        </select>
+                        <button onclick="searchActivities()">Search</button>
+                    </div>
+
+                    <div id="resultsContainer">
+                        <div class="loading">
+                            <p>Enter a city and click Search to find activities</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="card" id="resultsCard" style="display: none;">
+                    <h2>📋 Search Results</h2>
+                    <div id="activityResultsPanel" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+                <!-- Chat Section -->
+                <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h2 style="margin: 0;">💬 Chat with Activity Agent</h2>
+                        <button onclick="newChatTab()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">+ New Chat</button>
+                    </div>
+                    
+                    <!-- Chat Tabs -->
+                    <div id="chatTabs" style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 2px solid #ddd; overflow-x: auto; padding-bottom: 10px;">
+                        <!-- Tabs will be dynamically generated here -->
+                    </div>
+                    
+                    <p style="color: #666; font-size: 0.9em; margin-bottom: 15px;">Detailed responses appear here. Ask follow-up questions to continue the conversation!</p>
+                    
+                    <div id="chatMessages" style="flex: 1; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 15px; background: #f9f9f9; min-height: 300px; max-height: 400px;">
+                        <div style="color: #999; text-align: center; padding: 20px;">
+                            Search results and responses will appear here...
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="chatInput" placeholder="Ask follow-up questions... (e.g., 'Tell me more about parking')" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em;">
+                        <button onclick="sendChatMessage()" style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Send</button>
+                    </div>
+                </div>
+
+                <!-- Visit History Section -->
+                <div class="card" id="visitHistoryCard" style="display: none;">
+                    <h2>📅 Visit History</h2>
+                    <div id="visitHistoryPanel" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+                <!-- Stats Section -->
+                <div class="card" id="statsCard" style="display: none;">
+                    <h2>📊 Statistics</h2>
+                    <div id="statsPanel" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+                <!-- Recommendations Section -->
+                <div class="card" id="recommendationsCard" style="display: none;">
+                    <h2>💡 Personalized Recommendations</h2>
+                    <div id="recommendationsPanel" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditProfileModal()">&times;</span>
+            <div class="modal-header">Edit Family Profile</div>
+            
+            <form onsubmit="saveProfile(event)">
+                <div class="form-group">
+                    <label for="editCity">Home City:</label>
+                    <input type="text" id="editCity" placeholder="e.g., Helsinki" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editCountry">Country Code:</label>
+                    <input type="text" id="editCountry" placeholder="e.g., FI" maxlength="2">
+                </div>
+
+                <div class="form-group">
+                    <label for="editFamilySize">Family Size:</label>
+                    <input type="number" id="editFamilySize" placeholder="e.g., 3" min="1" max="10">
+                </div>
+
+                <div class="form-group">
+                    <label for="editBudget">Budget Preference:</label>
+                    <select id="editBudget">
+                        <option value="">Select...</option>
+                        <option value="free">Free</option>
+                        <option value="budget">Budget-friendly</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="any" selected>Any</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editTravelTime">Max Travel Time (minutes):</label>
+                    <input type="number" id="editTravelTime" placeholder="e.g., 30" min="5" max="120">
+                </div>
+
+                <div class="form-group">
+                    <label for="editIndoorOutdoor">Indoor/Outdoor Preference:</label>
+                    <select id="editIndoorOutdoor">
+                        <option value="">Select...</option>
+                        <option value="indoor">Indoor</option>
+                        <option value="outdoor">Outdoor</option>
+                        <option value="both">Both</option>
+                    </select>
+                </div>
+
+                <div style="text-align: right;">
+                    <button type="button" class="btn-secondary" onclick="closeEditProfileModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Visit Modal -->
+    <div id="visitModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeVisitModal()">&times;</span>
+            <div class="modal-header">Record Your Visit</div>
+            
+            <form onsubmit="recordVisit(event)">
+                <div class="form-group">
+                    <div style="font-weight: 600; margin-bottom: 8px; color: #333;">Rating</div>
+                    <div class="rating-stars" id="ratingStars">
+                        <span class="star" onclick="setRating(1)">★</span>
+                        <span class="star" onclick="setRating(2)">★</span>
+                        <span class="star" onclick="setRating(3)">★</span>
+                        <span class="star" onclick="setRating(4)">★</span>
+                        <span class="star" onclick="setRating(5)">★</span>
+                    </div>
+                    <input type="hidden" id="visitRating" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="visitNotes">Notes (optional):</label>
+                    <textarea id="visitNotes" placeholder="What did you think? Any tips for other families?"></textarea>
+                </div>
+
+                <input type="hidden" id="visitActivityId" value="">
+
+                <div style="text-align: right;">
+                    <button type="button" class="btn-secondary" onclick="closeVisitModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Visit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ====================================================================
+        // Markdown Rendering
+        // ====================================================================
+        
+        function renderMarkdown(markdown) {
+            if (!markdown) return '';
+            return marked.parse(markdown);
+        }
+
+        // ====================================================================
+        // Profile Functions
+        // =====================================================================
+
+        function loadProfile() {
+            fetch('/api/profile')
+                .then(res => res.json())
+                .then(data => {
+                    const html = `
+                        <div class="profile-item">
+                            <span class="profile-label">📍 Home City</span>
+                            <span class="profile-value">${data.home_city || 'Not set'}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">👨‍👩‍👧‍👦 Family Size</span>
+                            <span class="profile-value">${data.family_members?.length || 0} members</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">💰 Budget</span>
+                            <span class="profile-value">${data.budget_preference || 'Not set'}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="profile-label">🚗 Max Travel</span>
+                            <span class="profile-value">${data.max_travel_minutes || '30'} min</span>
+                        </div>
+                    `;
+                    document.getElementById('profileDisplay').innerHTML = html;
+                    
+                    // Populate edit form
+                    document.getElementById('editCity').value = data.home_city || '';
+                    document.getElementById('editCountry').value = data.home_country || '';
+                    document.getElementById('editFamilySize').value = data.family_members?.length || '0';
+                    document.getElementById('editBudget').value = data.budget_preference || '';
+                    document.getElementById('editTravelTime').value = data.max_travel_minutes || '30';
+                    document.getElementById('editIndoorOutdoor').value = data.indoor_outdoor_preference || '';
+                    
+                    // Also update search city to default home city
+                    document.getElementById('searchCity').value = data.home_city || 'Vaasa';
+                })
+                .catch(err => {
+                    document.getElementById('profileDisplay').innerHTML = 
+                        '<div class="error">Error loading profile. Using defaults.</div>';
+                });
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('editProfileModal').style.display = 'block';
+        }
+
+        function closeEditProfileModal() {
+            document.getElementById('editProfileModal').style.display = 'none';
+        }
+
+        function saveProfile(e) {
+            e.preventDefault();
+            const familySize = parseInt(document.getElementById('editFamilySize').value || '0');
+            const familyMembers = [];
+            
+            // Generate default family members if needed
+            if (familySize > 0) {
+                for (let i = 0; i < familySize; i++) {
+                    if (i === 0) {
+                        familyMembers.push({ name: 'Parent 1', role: 'parent', age: 30 });
+                    } else if (i === 1) {
+                        familyMembers.push({ name: 'Parent 2', role: 'parent', age: 30 });
+                    } else {
+                        familyMembers.push({ name: `Child ${i-1}`, role: 'child', age: 5 });
+                    }
+                }
+            }
+            
+            const data = {
+                home_city: document.getElementById('editCity').value,
+                home_country: document.getElementById('editCountry').value,
+                family_members: familyMembers,
+                budget_preference: document.getElementById('editBudget').value,
+                max_travel_minutes: parseInt(document.getElementById('editTravelTime').value || '30'),
+                indoor_outdoor_preference: document.getElementById('editIndoorOutdoor').value
+            };
+
+            fetch('/api/profile', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                closeEditProfileModal();
+                loadProfile();
+                showMessage('Profile updated!', 'success');
+            })
+            .catch(err => showMessage('Error saving profile', 'error'));
+        }
+
+        // ====================================================================
+        // Search Functions
+        // ====================================================================
+
+        function searchActivities() {
+            const city = document.getElementById('searchCity').value.trim();
+            const category = document.getElementById('searchCategory').value;
+
+            if (!city) {
+                showMessage('Please enter a city', 'error');
+                return;
+            }
+
+            const container = document.getElementById('resultsContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Searching for activities...</div>';
+
+            const data = { city, category };
+            const userQuery = `Find ${category || 'fun'} activities in ${city}`;
+
+            fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(result => {
+                console.log('Search result:', result);
+                
+                // Display only the query in search results container
+                container.innerHTML = `
+                    <div class="success">
+                        <strong>✓ Query sent:</strong> ${result.query}
+                    </div>
+                    <div style="color: #666; font-size: 0.9em; margin-top: 10px;">
+                        See the detailed response in the Chat window below ↓
+                    </div>
+                `;
+                
+                // Create NEW tab for this search
+                newChatTab();
+                const activeTab = getActiveTab();
+                
+                activeTab.messages.push({ sender: 'user', text: userQuery });
+                
+                // Add agent response if available
+                if (result.result) {
+                    activeTab.messages.push({ sender: 'agent', text: result.result });
+                } else {
+                    console.warn('No result returned from agent:', result);
+                    activeTab.messages.push({ sender: 'agent', text: 'Searching for activities in ' + result.city + (result.category ? ' (' + result.category + ')' : '') + '...' });
+                }
+                
+                // Update tab title to reflect the search
+                const preview = userQuery.substring(0, 20) + (userQuery.length > 20 ? '...' : '');
+                activeTab.title = preview;
+                
+                renderTabs();
+                renderChatMessages();
+                
+                // Now fetch and display actual activities as cards
+                displayActivityCards(result.city, result.category);
+            })
+            .catch(err => {
+                console.error('Search error:', err);
+                container.innerHTML = '<div class="error">Error searching. Please try again.</div>';
+            });
+        }
+
+        // ====================================================================
+        // Activity Cards Display
+        // ====================================================================
+
+        function displayActivityCards(city, category) {
+            const resultsCard = document.getElementById('resultsCard');
+            const resultsPanel = document.getElementById('activityResultsPanel');
+            
+            // Show the results card
+            resultsCard.style.display = 'block';
+            resultsPanel.innerHTML = '<div style="color: #999;">Loading activities...</div>';
+            
+            // Fetch activities
+            const params = new URLSearchParams();
+            params.append('city', city);
+            if (category) params.append('category', category);
+            params.append('limit', 20);
+            
+            fetch(`/api/activities?${params.toString()}`)
+                .then(res => res.json())
+                .then(data => {
+                    
+                    if (!data.activities || data.activities.length === 0) {
+                        resultsPanel.innerHTML = `
+                            <div style="padding: 16px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; color: #856404;">
+                                <div style="font-weight: 600; margin-bottom: 8px;">📋 No exact matches in database</div>
+                                <div style="font-size: 0.9em; line-height: 1.5;">
+                                    We don't have any activities with the category "<strong>${category || 'unspecified'}</strong>" for <strong>${city}</strong> in our database yet.
+                                    <br><br>
+                                    Check the Chat window below for more information or alternative suggestions from the AI agent.
+                                    <br><br>
+                                    <strong>Tip:</strong> You can add more activities to the database by editing the test data.
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    resultsPanel.innerHTML = '';
+                    data.activities.forEach((activity, index) => {
+                        const card = document.createElement('div');
+                        card.className = 'activity-item';
+                        card.style.padding = '12px';
+                        card.style.border = '1px solid #e0e0e0';
+                        card.style.borderRadius = '6px';
+                        card.style.backgroundColor = '#fafafa';
+                        card.style.width = '100%';
+                        card.style.boxSizing = 'border-box';
+                        card.style.minHeight = 'auto';
+                        card.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; width: 100%;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="activity-name" style="font-weight: 600; margin: 0 0 6px 0; color: #333;">
+                                        ${activity.name || 'Unnamed Activity'}
+                                    </div>
+                                    <div style="font-size: 0.85em; color: #666; line-height: 1.4;">
+                                        ${activity.description ? activity.description.substring(0, 120) + (activity.description.length > 120 ? '...' : '') : ''}
+                                    </div>
+                                    ${activity.category ? `<div style="margin-top: 6px; display: inline-block; background: #e8f0ff; color: #0066cc; padding: 2px 8px; border-radius: 3px; font-size: 0.8em;">${Array.isArray(activity.category) ? activity.category.join(', ') : activity.category}</div>` : ''}
+                                </div>
+                                <button class="btn-small" onclick="recordVisitForActivity('${activity.id}')" style="white-space: nowrap; padding: 8px 12px; font-size: 0.9em; flex-shrink: 0;">
+                                    📝 Log Visit
+                                </button>
+                            </div>
+                        `;
+                        resultsPanel.appendChild(card);
+                    });
+                    console.log(`Added ${data.activities.length} activity cards`);
+                })
+                .catch(err => {
+                    console.error('Error loading activities:', err);
+                    resultsPanel.innerHTML = '<div style="color: #999;">Could not load activity details</div>';
+                });
+        }
+
+        // ====================================================================
+        // Chat Functions - Tabbed Interface
+        // ====================================================================
+
+        let chatTabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
+
+        // Initialize with first tab
+        function initializeChat() {
+            chatTabs = [{
+                id: 'tab-0',
+                title: 'Chat 1',
+                messages: []
+            }];
+            activeTabId = 'tab-0';
+            tabCounter = 1;
+            renderTabs();
+        }
+
+        function renderTabs() {
+            const tabsContainer = document.getElementById('chatTabs');
+            tabsContainer.innerHTML = '';
+            
+            chatTabs.forEach(tab => {
+                const tabBtn = document.createElement('button');
+                tabBtn.style.cssText = `
+                    padding: 10px 16px;
+                    background: ${activeTabId === tab.id ? '#667eea' : '#f0f0f0'};
+                    color: ${activeTabId === tab.id ? '#fff' : '#333'};
+                    border: 1px solid #ddd;
+                    border-radius: 6px 6px 0 0;
+                    cursor: pointer;
+                    font-size: 0.9em;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    white-space: nowrap;
+                `;
+                
+                tabBtn.innerHTML = `
+                    <span>${tab.title}</span>
+                    ${chatTabs.length > 1 ? `<span style="cursor: pointer; font-weight: bold; margin-left: 4px;" onclick="closeTab(event, '${tab.id}')">✕</span>` : ''}
+                `;
+                
+                tabBtn.onclick = () => switchTab(tab.id);
+                tabsContainer.appendChild(tabBtn);
+            });
+        }
+
+        function newChatTab() {
+            const newTab = {
+                id: `tab-${tabCounter}`,
+                title: `Chat ${tabCounter + 1}`,
+                messages: []
+            };
+            tabCounter++;
+            chatTabs.push(newTab);
+            activeTabId = newTab.id;
+            renderTabs();
+            renderChatMessages();
+            document.getElementById('chatInput').focus();
+        }
+
+        function switchTab(tabId) {
+            activeTabId = tabId;
+            renderTabs();
+            renderChatMessages();
+            document.getElementById('chatInput').focus();
+        }
+
+        function closeTab(event, tabId) {
+            event.stopPropagation();
+            if (chatTabs.length === 1) {
+                alert('Cannot close the last tab. Use "New Chat" to create another tab first.');
+                return;
+            }
+            chatTabs = chatTabs.filter(tab => tab.id !== tabId);
+            if (activeTabId === tabId) {
+                activeTabId = chatTabs[0].id;
+            }
+            renderTabs();
+            renderChatMessages();
+        }
+
+        function getActiveTab() {
+            return chatTabs.find(tab => tab.id === activeTabId);
+        }
+
+        function renderChatMessages() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const activeTab = getActiveTab();
+            
+            if (!activeTab || activeTab.messages.length === 0) {
+                messagesDiv.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">Search results and responses will appear here...</div>';
+                return;
+            }
+            
+            messagesDiv.innerHTML = '';
+            activeTab.messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                let bgColor = '#f0f0f0';
+                let color = '#333';
+                let alignment = 'flex-start';
+                let icon = '🤖';
+                
+                if (msg.sender === 'user') {
+                    bgColor = '#667eea';
+                    color = '#fff';
+                    alignment = 'flex-end';
+                    icon = '👤';
+                } else if (msg.sender === 'agent') {
+                    bgColor = '#e8f4f8';
+                    color = '#333';
+                    alignment = 'flex-start';
+                    icon = '🤖';
+                } else if (msg.sender === 'error') {
+                    bgColor = '#ffe8e8';
+                    color = '#c00';
+                    alignment = 'flex-start';
+                    icon = '⚠️';
+                }
+                
+                messageDiv.style.cssText = `
+                    display: flex;
+                    justify-content: ${alignment};
+                    margin-bottom: 10px;
+                    animation: slideIn 0.3s ease-in;
+                `;
+                
+                messageDiv.innerHTML = `
+                    <div style="max-width: 80%; background: ${bgColor}; color: ${color}; padding: 12px 15px; border-radius: 8px; word-wrap: break-word;">
+                        <div style="font-size: 0.85em; margin-bottom: 5px;">${icon}</div>
+                        <div style="font-size: 0.95em; line-height: 1.5;">${msg.sender === 'agent' ? renderMarkdown(msg.text) : msg.text}</div>
+                    </div>
+                `;
+                
+                messagesDiv.appendChild(messageDiv);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) {
+                return;
+            }
+            
+            const activeTab = getActiveTab();
+            
+            // Add user message to current tab
+            activeTab.messages.push({ sender: 'user', text: message });
+            input.value = '';
+            renderChatMessages();
+            
+            // Update tab title to reflect conversation
+            const preview = message.substring(0, 20) + (message.length > 20 ? '...' : '');
+            if (activeTab.title.startsWith('Chat')) {
+                activeTab.title = preview;
+                renderTabs();
+            }
+            
+            // Send to API
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            })
+            .then(res => res.json())
+            .then(data => {
+                activeTab.messages.push({ sender: 'agent', text: data.response });
+                renderChatMessages();
+            })
+            .catch(err => {
+                activeTab.messages.push({ sender: 'error', text: 'Sorry, I encountered an error. Please try again.' });
+                renderChatMessages();
+            });
+        }
+
+        // Initialize chat on page load
+        window.addEventListener('load', () => {
+            initializeChat();
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        sendChatMessage();
+                    }
+                });
+            }
+        });
+
+        // ====================================================================
+        // Recommendations
+        // ====================================================================
+
+        function openRecommendationsModal() {
+            const recommendationsCard = document.getElementById('recommendationsCard');
+            const recommendationsPanel = document.getElementById('recommendationsPanel');
+            
+            recommendationsCard.style.display = 'block';
+            recommendationsPanel.innerHTML = '<div style="color: #999;">Getting personalized recommendations...</div>';
+
+            fetch('/api/recommendations')
+                .then(res => res.json())
+                .then(data => {
+                    recommendationsPanel.innerHTML = `
+                        <div style="padding: 12px; background: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px; margin-bottom: 12px;">
+                            <div style="font-weight: 600; color: #2e7d32; margin-bottom: 8px;">🎯 Based on your family profile</div>
+                            <div style="color: #333; font-size: 0.95em; line-height: 1.6;">
+                                ${renderMarkdown(data.result) || '<p>No recommendations available</p>'}
+                            </div>
+                        </div>
+                    `;
+                })
+                .catch(err => {
+                    console.error('Error getting recommendations:', err);
+                    recommendationsPanel.innerHTML = '<div style="color: #999;">Error getting recommendations</div>';
+                });
+        }
+
+        // ====================================================================
+        // Visit Recording
+        // ====================================================================
+
+        function recordVisitForActivity(activityId) {
+            document.getElementById('visitActivityId').value = activityId;
+            document.getElementById('visitRating').value = 0;
+            document.getElementById('visitNotes').value = '';
+            document.querySelectorAll('.rating-stars .star').forEach(s => s.classList.remove('active'));
+            document.getElementById('visitModal').style.display = 'block';
+        }
+
+        function closeVisitModal() {
+            document.getElementById('visitModal').style.display = 'none';
+        }
+
+        function setRating(rating) {
+            document.getElementById('visitRating').value = rating;
+            document.querySelectorAll('.rating-stars .star').forEach((s, i) => {
+                if (i < rating) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        }
+
+        function recordVisit(e) {
+            e.preventDefault();
+            const activityId = document.getElementById('visitActivityId').value;
+            const rating = parseInt(document.getElementById('visitRating').value);
+            const notes = document.getElementById('visitNotes').value;
+
+            if (!rating) {
+                showMessage('Please select a rating', 'error');
+                return;
+            }
+
+            fetch(`/api/activities/${activityId}/visit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating, notes })
+            })
+            .then(res => res.json())
+            .then(data => {
+                closeVisitModal();
+                showMessage('Visit recorded!', 'success');
+            })
+            .catch(err => showMessage('Error recording visit', 'error'));
+        }
+
+        function loadVisits() {
+            const visitHistoryCard = document.getElementById('visitHistoryCard');
+            const visitHistoryPanel = document.getElementById('visitHistoryPanel');
+            
+            visitHistoryCard.style.display = 'block';
+            visitHistoryPanel.innerHTML = '<div style="color: #999;">Loading visit history...</div>';
+
+            // Fetch activities and visits in parallel
+            Promise.all([
+                fetch('/api/visits').then(res => res.json()),
+                fetch('/api/activities?limit=1000').then(res => res.json())
+            ])
+            .then(([visitData, activitiesData]) => {
+                if (visitData.visits.length === 0) {
+                    visitHistoryPanel.innerHTML = '<div style="color: #999; padding: 20px; text-align: center;">No visits recorded yet</div>';
+                    return;
+                }
+
+                // Create activity lookup map
+                const activityMap = {};
+                if (activitiesData.activities) {
+                    activitiesData.activities.forEach(a => {
+                        activityMap[a.id] = a;
+                    });
+                }
+
+                visitHistoryPanel.innerHTML = '';
+                visitData.visits.forEach(v => {
+                    const rating = '⭐'.repeat(v.rating || 0);
+                    const activity = activityMap[v.activity_id] || {};
+                    const activityName = activity.name || v.activity_id;
+                    const visitDiv = document.createElement('div');
+                    visitDiv.style.padding = '12px';
+                    visitDiv.style.border = '1px solid #e0e0e0';
+                    visitDiv.style.borderRadius = '6px';
+                    visitDiv.style.backgroundColor = '#fafafa';
+                    visitDiv.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 6px; color: #333;">${activityName}</div>
+                                <div style="font-size: 0.85em; color: #666; margin-bottom: 6px;">
+                                    <div>${rating ? rating : 'Not rated'}</div>
+                                    <div>${new Date(v.visit_date).toLocaleDateString()}</div>
+                                </div>
+                                ${v.notes ? `<div style="font-size: 0.9em; margin-top: 8px; color: #666; padding: 8px; background: white; border-radius: 4px;">${v.notes}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    visitHistoryPanel.appendChild(visitDiv);
+                });
+            })
+            .catch(err => {
+                console.error('Error loading visits:', err);
+                visitHistoryPanel.innerHTML = '<div style="color: #999;">Error loading visits</div>';
+            });
+        }
+
+        // ====================================================================
+        // Stats
+        // ====================================================================
+
+        function loadStats() {
+            const statsCard = document.getElementById('statsCard');
+            const statsPanel = document.getElementById('statsPanel');
+            
+            statsCard.style.display = 'block';
+            statsPanel.innerHTML = '<div style="color: #999;">Loading statistics...</div>';
+
+            fetch('/api/stats')
+                .then(res => res.json())
+                .then(data => {
+                    statsPanel.innerHTML = '';
+                    
+                    // Create stats grid
+                    const statsGrid = document.createElement('div');
+                    statsGrid.style.display = 'grid';
+                    statsGrid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(150px, 1fr))';
+                    statsGrid.style.gap = '12px';
+                    statsGrid.style.marginBottom = '20px';
+                    
+                    const stats = [
+                        { label: 'Activities Stored', value: data.total_activities },
+                        { label: 'Total Visits Logged', value: data.total_visits },
+                        { label: 'Average Rating', value: data.avg_rating ? data.avg_rating.toFixed(1) + ' ⭐' : '—' },
+                        { label: 'Cities Explored', value: Object.keys(data.cities || {}).length }
+                    ];
+                    
+                    stats.forEach(stat => {
+                        const box = document.createElement('div');
+                        box.style.padding = '12px';
+                        box.style.border = '1px solid #e0e0e0';
+                        box.style.borderRadius = '6px';
+                        box.style.backgroundColor = '#f9f9f9';
+                        box.style.textAlign = 'center';
+                        box.innerHTML = `
+                            <div style="font-size: 1.5em; font-weight: 600; color: #667eea; margin-bottom: 6px;">${stat.value}</div>
+                            <div style="font-size: 0.85em; color: #666;">${stat.label}</div>
+                        `;
+                        statsGrid.appendChild(box);
+                    });
+                    statsPanel.appendChild(statsGrid);
+
+                    if (Object.keys(data.categories || {}).length > 0) {
+                        const catHeader = document.createElement('h3');
+                        catHeader.textContent = 'Activities by Category';
+                        catHeader.style.marginTop = '20px';
+                        catHeader.style.marginBottom = '12px';
+                        catHeader.style.color = '#333';
+                        statsPanel.appendChild(catHeader);
+                        
+                        for (const [cat, count] of Object.entries(data.categories || {})) {
+                            const catDiv = document.createElement('div');
+                            catDiv.style.padding = '12px';
+                            catDiv.style.backgroundColor = '#f9f9f9';
+                            catDiv.style.borderRadius = '6px';
+                            catDiv.style.marginBottom = '8px';
+                            catDiv.style.border = '1px solid #e0e0e0';
+                            catDiv.innerHTML = `<span style="font-weight: 600;">${cat}</span>: ${count} activities`;
+                            statsPanel.appendChild(catDiv);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Error loading stats:', err);
+                    statsPanel.innerHTML = '<div style="color: #999;">Error loading statistics</div>';
+                });
+        }
+
+        // ====================================================================
+        // Utilities
+        // ====================================================================
+
+        function showMessage(msg, type) {
+            const div = document.createElement('div');
+            div.className = type === 'success' ? 'success' : 'error';
+            div.textContent = msg;
+            document.body.insertBefore(div, document.body.firstChild);
+            setTimeout(() => div.remove(), 4000);
+        }
+
+        // Close modals when clicking outside
+        window.onclick = function(e) {
+            let modal = document.getElementById('editProfileModal');
+            if (e.target === modal) modal.style.display = 'none';
+            
+            modal = document.getElementById('visitModal');
+            if (e.target === modal) modal.style.display = 'none';
+        };
+
+        // ====================================================================
+        // Initialize
+        // ====================================================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChat();
+            loadProfile();
+        });
+    </script>
+</body>
+</html>

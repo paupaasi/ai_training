@@ -1,0 +1,41 @@
+{
+  "act_swimming_1": {
+    "id": "act_swimming_1",
+    "name": "Vaasa Swimming Hall",
+    "city": "Vaasa",
+    "category": "swimming",
+    "description": "Modern pool",
+    "phone": "+358 6 325 3000"
+  },
+  "act_indoor_1": {
+    "id": "act_indoor_1",
+    "name": "Leo's Vaasa",
+    "city": "Vaasa",
+    "category": "indoor_play",
+    "description": "Play center",
+    "phone": "+358 6 312 2200"
+  },
+  "act_indoor_2": {
+    "id": "act_indoor_2",
+    "name": "Tropiclandia",
+    "city": "Vaasa",
+    "category": ["swimming", "indoor_play"],
+    "description": "Tropical park with pool",
+    "phone": "+358 6 318 8080"
+  },
+  "act_park_1": {
+    "id": "act_park_1",
+    "name": "Vaasa Main Park",
+    "city": "Vaasa",
+    "category": "park",
+    "description": "Public park"
+  },
+  "act_library_1": {
+    "id": "act_library_1",
+    "name": "Vaasa Main Library",
+    "city": "Vaasa",
+    "category": ["indoor_play", "library"],
+    "description": "Library",
+    "phone": "+358 6 325 4500"
+  }
+}

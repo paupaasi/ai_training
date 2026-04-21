@@ -1,0 +1,28 @@
+{
+  "visits": [
+    {
+      "activity_id": "act_swimming_1",
+      "rating": 2,
+      "notes": "Quite cold water",
+      "visit_date": "2026-04-21T09:47:11.913608"
+    },
+    {
+      "activity_id": "act_indoor_2",
+      "rating": 5,
+      "notes": "Great place for families!",
+      "visit_date": "2026-04-21T10:10:56.374791"
+    },
+    {
+      "activity_id": "act_indoor_1",
+      "rating": 5,
+      "notes": "Boy loved this",
+      "visit_date": "2026-04-21T10:22:19.758217"
+    },
+    {
+      "activity_id": "act_library_1",
+      "rating": 4,
+      "notes": "Nice fishes. Cafe missing.",
+      "visit_date": "2026-04-21T10:47:16.614140"
+    }
+  ]
+}
