@@ -1,0 +1,86 @@
+{
+  "name": "Our Family",
+  "family_members": [
+    {
+      "name": "Mother",
+      "role": "parent",
+      "age": 35
+    },
+    {
+      "name": "Father",
+      "role": "parent",
+      "age": 34
+    },
+    {
+      "name": "Son",
+      "role": "child",
+      "age": 2
+    }
+  ],
+  "home_city": "Vaasa",
+  "home_country": "FI",
+  "preferred_categories": [
+    "playground",
+    "park",
+    "nature",
+    "indoor_play",
+    "museum",
+    "swimming"
+  ],
+  "budget_preference": "any",
+  "accessibility_needs": [
+    "stroller_friendly",
+    "parking_nearby"
+  ],
+  "transport_mode": "car",
+  "max_travel_minutes": 30,
+  "excluded_categories": [],
+  "indoor_outdoor_preference": "both",
+  "min_child_age": 2,
+  "max_activity_duration_minutes": 120,
+  "created_at": "2026-04-21T08:32:16.990480",
+  "updated_at": "2026-04-21T08:40:39.025857",
+  "current_profile": {
+    "name": "Our Family",
+    "family_members": [
+      {
+        "name": "Parent 1",
+        "role": "parent",
+        "age": 30
+      },
+      {
+        "name": "Parent 2",
+        "role": "parent",
+        "age": 30
+      },
+      {
+        "name": "Child 1",
+        "role": "child",
+        "age": 5
+      }
+    ],
+    "home_city": "Vaasa",
+    "home_country": "FI",
+    "preferred_categories": [
+      "playground",
+      "park",
+      "nature",
+      "indoor_play",
+      "museum",
+      "swimming"
+    ],
+    "budget_preference": "any",
+    "accessibility_needs": [
+      "stroller_friendly",
+      "parking_nearby"
+    ],
+    "transport_mode": "car",
+    "max_travel_minutes": 30,
+    "excluded_categories": [],
+    "indoor_outdoor_preference": "both",
+    "min_child_age": 2,
+    "max_activity_duration_minutes": 120,
+    "created_at": "2026-04-21T08:32:16.990480",
+    "updated_at": "2026-04-21T08:45:53.412508"
+  }
+}
