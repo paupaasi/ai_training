@@ -1,0 +1,38 @@
+[
+  {
+    "type": "tool",
+    "name": "gemini",
+    "input": {
+      "prompt": "hello",
+      "model": "gemini-2.0-flash-001"
+    },
+    "output": {
+      "response": "Hi there!"
+    },
+    "duration_ms": 150,
+    "id": "c37a1faf-a511-4a44-a6f3-95195838692d",
+    "timestamp": "2026-04-27T08:04:43.226Z"
+  },
+  {
+    "type": "agent",
+    "name": "activity-selection-agent:select_activity",
+    "input": {
+      "family_id": "123",
+      "weather": "sunny"
+    },
+    "output": {
+      "activity": "park_visit"
+    },
+    "id": "20ca498b-f596-432e-b114-99d795b039ca",
+    "timestamp": "2026-04-27T08:04:43.229Z"
+  },
+  {
+    "type": "action",
+    "name": "user_login",
+    "input": {
+      "user_id": "user_456"
+    },
+    "id": "96fcb424-c1cd-42c0-9e72-e3e4cf238ab0",
+    "timestamp": "2026-04-27T08:04:43.232Z"
+  }
+]

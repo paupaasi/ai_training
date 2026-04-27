@@ -42,7 +42,9 @@
     "github:release-list": "NODE_ENV=development tsx tools/github-cli.ts release-list",
     "github:repo": "NODE_ENV=development tsx tools/github-cli.ts repo",
     "github:workflow": "NODE_ENV=development tsx tools/github-cli.ts workflow",
-    "github:tasks": "NODE_ENV=development tsx tools/github-cli.ts tasks"
+    "github:tasks": "NODE_ENV=development tsx tools/github-cli.ts tasks",
+    "log:view": "NODE_ENV=development tsx tools/usage-logger.ts view",
+    "log:clear": "NODE_ENV=development tsx tools/usage-logger.ts clear"
   },
   "dependencies": {
     "@google/genai": "^0.12.0",
