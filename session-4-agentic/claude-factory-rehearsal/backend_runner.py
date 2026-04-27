@@ -3,11 +3,21 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
 logger = logging.getLogger(__name__)
+
+if not logger.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+        datefmt='%H:%M:%S',
+    )
+
+_START_TIME: dict[str, float] = {}
 
 Backend = Literal['claude', 'codex', 'opencode']
 
@@ -320,11 +330,42 @@ async def _run_opencode(options: BackendRunOptions) -> BackendRunResult:
 
 
 async def run_backend(options: BackendRunOptions) -> BackendRunResult:
-    if options.backend == 'claude':
-        return await _run_claude(options)
-    if options.backend == 'codex':
-        return await _run_codex(options)
-    return await _run_opencode(options)
+    run_id = f"{options.backend}-{int(time.time() * 1000)}"
+    _START_TIME[run_id] = time.monotonic()
+    logger.info(
+        '[%s] Starting backend=%s, cwd=%s, max_turns=%d, permission_mode=%s, resume=%s',
+        run_id,
+        options.backend,
+        options.cwd,
+        options.max_turns,
+        options.permission_mode,
+        options.resume_session_id,
+    )
+    try:
+        if options.backend == 'claude':
+            result = await _run_claude(options)
+        elif options.backend == 'codex':
+            result = await _run_codex(options)
+        else:
+            result = await _run_opencode(options)
+
+        elapsed = time.monotonic() - _START_TIME.get(run_id, 0)
+        logger.info(
+            '[%s] Completed backend=%s ok=%s stop_reason=%s session_id=%s elapsed=%.2fs',
+            run_id,
+            options.backend,
+            result.ok,
+            result.stop_reason,
+            result.session_id,
+            elapsed,
+        )
+        del _START_TIME[run_id]
+        return result
+    except Exception as e:
+        elapsed = time.monotonic() - _START_TIME.get(run_id, 0)
+        logger.exception('[%s] Unexpected error in run_backend: %s (elapsed=%.2fs)', run_id, e, elapsed)
+        del _START_TIME[run_id]
+        raise
 
 
 def get_default_cwd() -> Path:
