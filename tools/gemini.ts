@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
+import { logToolUsage } from './usage-logger';
 
 // Load environment variables
 dotenv.config({ path: '.env.local' });
@@ -383,16 +384,47 @@ function processGroundingResponse(response: any) {
 }
 
 async function main() {
+  const startTime = Date.now();
+  
+  const inputContext = {
+    model: options.model,
+    prompt: options.prompt,
+    temperature: parseFloat(options.temperature),
+    maxTokens: parseInt(options.maxTokens),
+    topP: parseFloat(options.topP),
+    topK: parseInt(options.topK),
+    hasFile: !!options.file,
+    hasImage: !!options.image,
+    hasUrl: !!options.url,
+    hasChatHistory: !!options.chatHistory,
+    stream: options.stream,
+    json: options.json,
+    ground: options.ground,
+  };
+
   try {
+    let capturedOutput = '';
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (chunk: any, ...args: any[]) => {
+      capturedOutput += chunk.toString();
+      return originalWrite(chunk, ...args);
+    };
+
     // Handle structured JSON response
     if (options.json) {
       try {
         const customSchema = options.schema ? JSON.parse(options.schema) : undefined;
         const jsonResponse = await getStructuredJsonResponse(options.prompt, options.json, customSchema);
         console.log(jsonResponse);
+        capturedOutput = jsonResponse;
+        
+        logToolUsage('gemini', inputContext, capturedOutput, undefined, Date.now() - startTime);
+        process.stdout.write = originalWrite;
         return;
       } catch (error) {
         console.error('Error generating structured JSON:', error);
+        logToolUsage('gemini', inputContext, undefined, String(error), Date.now() - startTime);
+        process.stdout.write = originalWrite;
         process.exit(1);
       }
     }
@@ -471,6 +503,7 @@ async function main() {
       } else {
         const result = await chat.sendMessage(contents); // Send only content parts
         console.log(result.text);
+        capturedOutput = result.text;
       }
     } else {
       // Single generation
@@ -488,13 +521,20 @@ async function main() {
         // For grounded responses, process and show attributions if requested
         if (options.ground) {
           processGroundingResponse(response);
+          capturedOutput = response.text;
         } else {
           console.log(response.text);
+          capturedOutput = response.text;
         }
       }
     }
+    
+    logToolUsage('gemini', inputContext, capturedOutput, undefined, Date.now() - startTime);
+    process.stdout.write = originalWrite;
   } catch (error) {
     console.error('Error:', error);
+    logToolUsage('gemini', inputContext, undefined, String(error), Date.now() - startTime);
+    process.stdout.write = originalWrite;
     process.exit(1);
   }
 }

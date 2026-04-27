@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPL Helper</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 30px 0; border-bottom: 1px solid #333; margin-bottom: 30px; }
+        h1 { font-size: 2.5rem; background: linear-gradient(135deg, #38003c, #00ff85); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: #888; margin-top: 10px; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab { background: #2a2a4a; border: none; padding: 12px 24px; color: #fff; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .tab:hover { background: #3a3a5a; }
+        .tab.active { background: #38003c; border: 1px solid #00ff85; }
+        .section { display: none; background: #2a2a4a; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .section.active { display: block; }
+        .btn { background: #00ff85; color: #1a1a2e; border: none; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 8px; cursor: pointer; margin: 5px; }
+        .btn:hover { opacity: 0.9; }
+        .player-list { list-style: none; padding: 0; }
+        .player-item { background: #1a1a3e; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .player-info { flex: 1; }
+        .player-name { font-size: 1.2rem; font-weight: bold; }
+        .player-meta { color: #888; font-size: 0.9rem; }
+        .stat { display: inline-block; background: #38003c; padding: 5px 10px; border-radius: 4px; margin: 5px; font-size: 0.9rem; }
+        .reason { color: #00ff85; font-size: 0.9rem; margin-top: 5px; }
+        .chip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .chip-card { background: #1a1a3e; padding: 20px; border-radius: 8px; text-align: center; }
+        .chip-name { font-size: 1.3rem; font-weight: bold; color: #00ff85; }
+        .chip-when { font-size: 1.1rem; margin: 10px 0; }
+        .chip-reason { color: #888; font-size: 0.9rem; }
+        input, textarea { width: 100%; padding: 12px; background: #1a1a3e; border: 1px solid #333; color: #fff; border-radius: 8px; margin: 5px 0; }
+        textarea { min-height: 100px; resize: vertical; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        th { color: #00ff85; }
+        .loading { color: #888; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FPL Helper</h1>
+            <p class="subtitle">Fantasy Premier League Decision Support</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showSection('captain')">Captain</button>
+            <button class="tab" onclick="showSection('transfers')">Transfers</button>
+            <button class="tab" onclick="showSection('chips')">Chips</button>
+            <button class="tab" onclick="showSection('injuries')">Injuries</button>
+            <button class="tab" onclick="showSection('squad')">My Squad</button>
+        </div>
+
+        <div id="captain" class="section active">
+            <h2>Captain Picks</h2>
+            <p>Get the best captain recommendations based on form and fixtures.</p>
+            <br>
+            <button class="btn" onclick="getCaptainPicks()">Get Recommendations</button>
+            <div id="captain-results"></div>
+        </div>
+
+        <div id="transfers" class="section">
+            <h2>Transfer Recommendations</h2>
+            <p>Find the best buy/sell transfers based on value and form.</p>
+            <br>
+            <button class="btn" onclick="getTransfers()">Get Recommendations</button>
+            <div id="transfer-results"></div>
+        </div>
+
+        <div id="chips" class="section">
+            <h2>Chip Strategy</h2>
+            <p>Optimal timing for using your chips.</p>
+            <br>
+            <button class="btn" onclick="getChipAdvice()">Get Advice</button>
+            <div id="chip-results"></div>
+        </div>
+
+        <div id="injuries" class="section">
+            <h2>Injury News</h2>
+            <p>Current Premier League injuries and suspensions.</p>
+            <br>
+            <button class="btn" onclick="getInjuries()">Check Injuries</button>
+            <div id="injury-results"></div>
+        </div>
+
+        <div id="squad" class="section">
+            <h2>My Squad</h2>
+            <p>Save and manage your FPL squad.</p>
+            <br>
+            <textarea id="squad-input" placeholder="Enter player names (one per line)"></textarea>
+            <br>
+            <button class="btn" onclick="saveSquad()">Save Squad</button>
+            <button class="btn" onclick="loadSquad()">Load Squad</button>
+        </div>
+    </div>
+
+    <script>
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active'));
+            event.target.classList.add('active'));
+        }
+
+        async function getCaptainPicks() {
+            const results = document.getElementById('captain-results');
+            results.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const resp = await fetch('/api/recommend', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({category: 'captain'})
+                });
+                const data = await resp.json();
+                
+                if (data.top_picks) {
+                    let html = '<ul class="player-list">';
+                    data.top_picks.forEach((p, i) => {
+                        html += `<li class="player-item">
+                            <div class="player-info">
+                                <div class="player-name">#${i+1} ${p.player}</div>
+                                <div class="reason">${p.reason}</div>
+                            </div>
+                        </li>`;
+                    });
+                    html += '</ul>';
+                    results.innerHTML = html;
+                }
+            } catch (e) {
+                results.innerHTML = '<p>Error loading recommendations</p>';
+            }
+        }
+
+        async function getTransfers() {
+            const results = document.getElementById('transfer-results');
+            results.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const resp = await fetch('/api/recommend', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({category: 'transfer'})
+                });
+                const data = await resp.json();
+                
+                let html = '<h3>Buy</h3><ul class="player-list">';
+                if (data.buy) {
+                    data.buy.forEach(p => {
+                        html += `<li class="player-item">
+                            <div class="player-info">
+                                <div class="player-name">${p.player} (${p.price}m)</div>
+                                <div class="reason">${p.reason}</div>
+                            </div>
+                        </li>`;
+                    });
+                }
+                html += '</ul>';
+                
+                html += '<h3>Sell</h3><ul class="player-list">';
+                if (data.sell) {
+                    data.sell.forEach(p => {
+                        html += `<li class="player-item">
+                            <div class="player-info">
+                                <div class="player-name">${p.player}</div>
+                                <div class="reason">${p.reason}</div>
+                            </div>
+                        </li>`;
+                    });
+                }
+                html += '</ul>';
+                results.innerHTML = html;
+            } catch (e) {
+                results.innerHTML = '<p>Error loading transfers</p>';
+            }
+        }
+
+        async function getChipAdvice() {
+            const results = document.getElementById('chip-results');
+            results.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const resp = await fetch('/api/recommend', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({category: 'chips'})
+                });
+                const data = await resp.json();
+                
+                let html = '<div class="chip-grid">';
+                if (data.wildcard) {
+                    Object.entries(data).forEach(([chip, info]) => {
+                        html += `<div class="chip-card">
+                            <div class="chip-name">${chip}</div>
+                            <div class="chip-when">${info}</div>
+                        </div>`;
+                    });
+                }
+                html += '</div>';
+                results.innerHTML = html;
+            } catch (e) {
+                results.innerHTML = '<p>Error loading chip advice</p>';
+            }
+        }
+
+        async function getInjuries() {
+            const results = document.getElementById('injury-results');
+            results.innerHTML = '<div class="loading">Loading...</div>';
+            
+            try {
+                const resp = await fetch('/api/injuries');
+                const data = await resp.json();
+                
+                let html = '<ul class="player-list">';
+                data.injuries.forEach(i => {
+                    html += `<li class="player-item">
+                        <div class="player-info">
+                            <div class="player-name">${i.player}</div>
+                            <div class="player-meta">${i.club} - ${i.status}</div>
+                        </div>
+                    </li>`;
+                });
+                html += '</ul>';
+                results.innerHTML = html;
+            } catch (e) {
+                results.innerHTML = '<p>Error loading injuries</p>';
+            }
+        }
+
+        async function saveSquad() {
+            const input = document.getElementById('squad-input').value;
+            const resp = await fetch('/api/squad', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({players: input.split('\n').filter(p => p.trim())})
+            });
+            alert('Squad saved!');
+        }
+
+        async function loadSquad() {
+            const resp = await fetch('/api/squad');
+            const data = await resp.json();
+            document.getElementById('squad-input').value = data.players?.join('\n') || '';
+        }
+    </script>
+</body>
+</html>

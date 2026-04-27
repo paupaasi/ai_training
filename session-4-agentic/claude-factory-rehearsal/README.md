@@ -8,7 +8,7 @@ Core idea for participants:
 "A software factory is a reusable policy wrapper around an agent loop:
 goal contract + tool policy + quality gates."
 
-## Training flow (3 rehearsals)
+## Training flow (4 rehearsals)
 
 ### Rehearsal 1 - Minimal Factory
 
@@ -80,6 +80,48 @@ Run:
 uv run python 04_spec_loop_factory.py --backend codex --spec spec.example.json
 ```
 
+### Rehearsal 4 - Agent Factory (Combined: Roles + Sessions + Loops)
+
+**Goal:** demonstrate a practical, production-grade factory that generates new AI agents end-to-end.
+
+Scripts:
+
+- `05_agent_factory.py`
+
+Documentation:
+
+- `AGENT_FACTORY.md` (full design and concepts)
+- `QUICKSTART_AGENT_FACTORY.md` (quick start guide)
+
+What to teach:
+
+- combines all three concepts: roles + session resumption + spec-driven loops
+- specialized factories can be domain-specific (in this case: agent generation)
+- five roles working in concert: Spec Writer → Developer → Tester → Reviewer → Fixer
+- complete workflow from goal → validated agent implementation
+
+Run:
+
+```bash
+# Start a new agent factory run
+uv run python 05_agent_factory.py start sentiment-analyzer --backend claude
+
+# When prompted, provide agent goal:
+# "Create an agent that analyzes sentiment in customer reviews and categorizes them"
+
+# Resume a paused run
+uv run python 05_agent_factory.py resume sentiment-analyzer
+
+# Check status of any run
+uv run python 05_agent_factory.py status sentiment-analyzer
+```
+
+Output is created in `session-3-ai-agents/agents/<agent_name>/` with:
+- Complete agent implementation
+- Comprehensive test suite
+- Agent documentation
+- All dependencies configured
+
 ---
 
 ## Setup for training session
@@ -120,8 +162,11 @@ pip install claude-agent-sdk
 - `02_factory_catalog.py` - role-based factory policies
 - `03_resumable_factory.py` - session continuation
 - `04_spec_loop_factory.py` - implement/test/review loop
+- `05_agent_factory.py` - **agent generation factory (combines all concepts)**
 - `backend_runner.py` - backend adapter (`claude`, `codex`, `opencode`)
 - `spec.example.json` - editable loop specification
+- `AGENT_FACTORY.md` - **full design documentation for agent factory**
+- `QUICKSTART_AGENT_FACTORY.md` - **quick start guide with examples**
 - `run_demo.sh` - quick environment and demo runner
 
 ---

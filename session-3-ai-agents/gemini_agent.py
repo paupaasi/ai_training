@@ -37,6 +37,7 @@ import subprocess
 from datetime import datetime
 from typing import List, Optional, Dict, Set, Tuple, Any
 from dotenv import load_dotenv
+from trace import trace_message, trace_function_call, trace_function_response, trace_event, get_trace_summary
 
 # Load environment variables from .env.local
 load_dotenv('.env.local')
@@ -408,6 +409,13 @@ def execute_cli_function(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
     """Execute a known CLI function by assembling the correct npm command.
     Returns a JSON-serializable dict with results.
     """
+    result = _execute_cli_function_impl(name, args)
+    trace_function_response(name, result)
+    return result
+
+
+def _execute_cli_function_impl(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    """Implementation of CLI function execution."""
     if name == "html_to_md":
         cmd = ["npm", "run", "html-to-md", "--", "--url", args.get("url", "")]
         if args.get("output"):
@@ -685,7 +693,10 @@ def find_function_call_parts(response) -> List[Tuple[str, Dict[str, Any]]]:
     for p in parts:
         fc = getattr(p, "function_call", None)
         if fc and getattr(fc, "name", None):
-            calls.append((fc.name, dict(getattr(fc, "args", {}) or {})))
+            name = fc.name
+            args_dict = dict(getattr(fc, "args", {}) or {})
+            calls.append((name, args_dict))
+            trace_function_call(name, args_dict, direction="call")
     return calls
 
 
@@ -723,8 +734,10 @@ def print_response(response) -> None:
         if getattr(part, "text", None):
             text_chunks.append(part.text)
 
-    if text_chunks:
-        print("\n".join(text_chunks))
+    full_text = "\n".join(text_chunks)
+    if full_text:
+        trace_message("model", full_text, direction="out")
+        print(full_text)
 
     # Print any generated code parts and execution results
     for part in parts:
@@ -774,6 +787,7 @@ def _describe_mcp(params: Optional[StdioServerParameters]) -> str:
 
 
 def run_single_turn_sync(client: genai.Client, model: str, user_prompt: str):
+    trace_message("user", user_prompt, direction="in")
     tools = build_cli_tools()
     system_prompt = build_system_prompt()
     
@@ -906,6 +920,7 @@ Remember: Your goal is to be maximally helpful by actively using your functions 
 
 
 async def run_single_turn_async(client: genai.Client, model: str, user_prompt: str, *, mcp_params: Optional[StdioServerParameters]) -> None:
+    trace_message("user", user_prompt, direction="in")
     tools = build_cli_tools()
     system_prompt = build_system_prompt()
     
@@ -947,7 +962,9 @@ async def run_single_turn_async(client: genai.Client, model: str, user_prompt: s
     async with stdio_client(mcp_params) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            print(f"[MCP] Session attached: {_describe_mcp(mcp_params)}")
+            mcp_desc = _describe_mcp(mcp_params)
+            print(f"[MCP] Session attached: {mcp_desc}")
+            trace_event("mcp", f"Session initialized: {mcp_desc}", {"server": mcp_desc})
             config = types.GenerateContentConfig(tools=tools + [session])
             response = await client.aio.models.generate_content(
                 model=model,
@@ -1000,6 +1017,8 @@ async def run_chat_loop_async(client: genai.Client, model: str, *, mcp_params: O
             continue
         if user_input.lower() in {"exit", "quit", ":q", "/exit"}:
             break
+
+        trace_message("user", user_input, direction="in")
 
         # No tool management needed - CLI tools are always enabled
 
@@ -1179,9 +1198,23 @@ def main() -> None:
     # Always use async flow for consistency (CLI tools + optional MCP)
     if args.chat:
         asyncio.run(run_chat_loop_async(client, args.model, mcp_params=mcp_params))
+        _print_trace_summary()
         return
     
     asyncio.run(run_single_turn_async(client, args.model, args.prompt, mcp_params=mcp_params))
+    _print_trace_summary()
+
+
+def _print_trace_summary() -> None:
+    """Print trace summary after execution."""
+    summary = get_trace_summary()
+    if summary["total"] > 0:
+        print(f"\n--- Trace Summary ---")
+        print(f"Total messages: {summary['total']}")
+        for direction, count in summary["directions"].items():
+            print(f"  {direction}: {count}")
+        for role, count in summary["roles"].items():
+            print(f"  role={role}: {count}")
 
 
 if __name__ == "__main__":

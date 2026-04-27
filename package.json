@@ -26,10 +26,7 @@
     "nano-banana": "NODE_ENV=development tsx tools/nano-banana.ts",
     "google-search": "NODE_ENV=development tsx tools/google-search.ts",
     "datetime": "NODE_ENV=development tsx tools/datetime.ts",
-    "coding-preferences": "python3 tools/coding-preferences.py",
     "qwen3-tts": "NODE_ENV=development tsx tools/qwen3-tts.ts",
-    "minimax-music": "NODE_ENV=development tsx tools/minimax-music.ts",
-    "grounding-dino": "NODE_ENV=development tsx tools/grounding-dino.ts",
     "play-audio": "NODE_ENV=development tsx tools/play-audio.ts",
     "sprite-animator": "NODE_ENV=development tsx tools/sprite-animator.ts",
     "data-indexing": "python3 tools/data-indexing.py",
@@ -45,7 +42,9 @@
     "github:release-list": "NODE_ENV=development tsx tools/github-cli.ts release-list",
     "github:repo": "NODE_ENV=development tsx tools/github-cli.ts repo",
     "github:workflow": "NODE_ENV=development tsx tools/github-cli.ts workflow",
-    "github:tasks": "NODE_ENV=development tsx tools/github-cli.ts tasks"
+    "github:tasks": "NODE_ENV=development tsx tools/github-cli.ts tasks",
+    "log:view": "NODE_ENV=development tsx tools/usage-logger.ts view",
+    "log:clear": "NODE_ENV=development tsx tools/usage-logger.ts clear"
   },
   "dependencies": {
     "@google/genai": "^0.12.0",

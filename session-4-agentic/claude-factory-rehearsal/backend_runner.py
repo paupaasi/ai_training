@@ -3,11 +3,21 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
 logger = logging.getLogger(__name__)
+
+if not logger.handlers:
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s %(levelname)s %(name)s: %(message)s',
+        datefmt='%H:%M:%S',
+    )
+
+_START_TIME: dict[str, float] = {}
 
 Backend = Literal['claude', 'codex', 'opencode']
 
@@ -34,16 +44,21 @@ class BackendRunResult:
 
 
 async def _run_claude(options: BackendRunOptions) -> BackendRunResult:
+    model_display = options.model or 'default'
     logger.info(
-        'Running claude backend (cwd=%s, model=%s, resume=%s)',
+        'Running claude backend (cwd=%s, model=%s, resume=%s, allowed_tools=%s, permission_mode=%s)',
         options.cwd,
-        options.model,
+        model_display,
         options.resume_session_id,
+        options.allowed_tools,
+        options.permission_mode,
     )
+    logger.debug('Claude prompt (first 500 chars): %s', options.prompt[:500])
     from claude_agent_sdk import ClaudeAgentOptions, ResultMessage, SystemMessage, query
 
     last_session_id: str | None = options.resume_session_id
     final_result: BackendRunResult | None = None
+    turn_count = 0
     try:
         async for message in query(
             prompt=options.prompt,
@@ -56,14 +71,27 @@ async def _run_claude(options: BackendRunOptions) -> BackendRunResult:
                 model=options.model,
             ),
         ):
+            msg_type = type(message).__name__
+            logger.debug('Claude message received: %s', msg_type)
+
+            if hasattr(message, 'turn_count'):
+                turn_count = message.turn_count
+            elif 'turn' in msg_type.lower():
+                turn_count += 1
+            if turn_count > 0 and turn_count % 2 == 0:
+                logger.info('Claude turn %d/%d', turn_count, options.max_turns)
+
             if isinstance(message, SystemMessage) and getattr(message, 'subtype', None) == 'init':
                 maybe_id = getattr(message, 'session_id', None)
                 if maybe_id:
                     last_session_id = str(maybe_id)
+                    logger.info('Claude session_id captured: %s', last_session_id)
 
             if isinstance(message, ResultMessage):
                 if message.session_id:
                     last_session_id = str(message.session_id)
+                    logger.debug('Claude result session_id captured: %s', last_session_id)
+                logger.info('Claude result message: subtype=%s, text_len=%d', message.subtype, len(message.result or ''))
                 if message.subtype == 'success':
                     final_result = BackendRunResult(
                         ok=True,
@@ -95,8 +123,16 @@ async def _run_claude(options: BackendRunOptions) -> BackendRunResult:
         )
 
     if final_result is not None:
+        logger.info(
+            'Claude backend completed (session_id=%s, ok=%s, stop_reason=%s, text_len=%d)',
+            final_result.session_id,
+            final_result.ok,
+            final_result.stop_reason,
+            len(final_result.text),
+        )
         return final_result
 
+    logger.warning('Claude backend: no result message received, session_id=%s', last_session_id)
     return BackendRunResult(
         ok=False,
         text='',
@@ -106,25 +142,35 @@ async def _run_claude(options: BackendRunOptions) -> BackendRunResult:
 
 
 async def _run_codex(options: BackendRunOptions) -> BackendRunResult:
+    model_display = options.model or 'default'
     logger.info(
-        'Running codex backend (cwd=%s, model=%s, resume=%s)',
+        'Running codex backend (cwd=%s, model=%s, resume=%s, allowed_tools=%s, permission_mode=%s)',
         options.cwd,
-        options.model,
+        model_display,
         options.resume_session_id,
+        options.allowed_tools,
+        options.permission_mode,
     )
+    logger.debug('Codex prompt (first 500 chars): %s', options.prompt[:500])
+
     cmd = ['codex', 'exec', '--json']
     if options.model:
         cmd.extend(['--model', options.model])
     if options.permission_mode == 'acceptEdits':
         cmd.append('--full-auto')
+        logger.debug('Codex permission_mode=acceptEdits -> --full-auto')
     elif options.permission_mode in ('default', 'plan'):
         cmd.extend(['-s', 'read-only'])
+        logger.debug('Codex permission_mode=%s -> -s read-only', options.permission_mode)
     if options.resume_session_id:
         cmd.extend(['resume', options.resume_session_id, options.prompt])
     else:
         cmd.append(options.prompt)
 
-    logger.debug('Codex command prepared: %s', cmd)
+    logger.info('Codex command prepared: %s', cmd)
+
+    turn_count = 0
+    last_progress_log = time.monotonic()
 
     process = await asyncio.create_subprocess_exec(
         *cmd,
@@ -163,6 +209,8 @@ async def _run_codex(options: BackendRunOptions) -> BackendRunResult:
             process.returncode,
             details,
         )
+        if stderr_text:
+            logger.debug('Codex stderr: %s', stderr_text)
         return BackendRunResult(
             ok=False,
             text='',
@@ -185,10 +233,13 @@ async def _run_codex(options: BackendRunOptions) -> BackendRunResult:
             maybe_id = data.get('thread_id')
             if isinstance(maybe_id, str) and maybe_id:
                 session_id = maybe_id
+                logger.debug('Codex session_id captured: %s', session_id)
 
         if data.get('type') == 'item.completed':
             item = data.get('item')
             if isinstance(item, dict) and item.get('type') == 'agent_message':
+                turn_count += 1
+                logger.info('Codex turn %d/%d', turn_count, options.max_turns)
                 text = item.get('text')
                 if isinstance(text, str) and text.strip():
                     result_text = text
@@ -215,10 +266,12 @@ async def _run_codex(options: BackendRunOptions) -> BackendRunResult:
 
 async def _run_opencode(options: BackendRunOptions) -> BackendRunResult:
     logger.info(
-        'Running opencode backend (cwd=%s, model=%s, resume=%s)',
+        'Running opencode backend (cwd=%s, model=%s, resume=%s, allowed_tools=%s, permission_mode=%s)',
         options.cwd,
         options.model,
         options.resume_session_id,
+        options.allowed_tools,
+        options.permission_mode,
     )
     cmd = ['opencode', 'run', '--format', 'json']
     if options.model:
@@ -228,6 +281,9 @@ async def _run_opencode(options: BackendRunOptions) -> BackendRunResult:
     cmd.append(options.prompt)
 
     logger.debug('Opencode command prepared: %s', cmd)
+    logger.debug('Opencode prompt (first 500 chars): %s', options.prompt[:500])
+
+    turn_count = 0
 
     process = await asyncio.create_subprocess_exec(
         *cmd,
@@ -266,6 +322,8 @@ async def _run_opencode(options: BackendRunOptions) -> BackendRunResult:
             process.returncode,
             details,
         )
+        if stderr_text:
+            logger.debug('Opencode stderr: %s', stderr_text)
         return BackendRunResult(
             ok=False,
             text='',
@@ -288,10 +346,13 @@ async def _run_opencode(options: BackendRunOptions) -> BackendRunResult:
             maybe_session = data.get('sessionID') or data.get('sessionId')
             if isinstance(maybe_session, str) and maybe_session:
                 session_id = maybe_session
+                logger.debug('Opencode session_id captured: %s', session_id)
 
         message = data.get('message') or data.get('text')
         if isinstance(message, str) and message.strip():
             result_text = message
+            turn_count += 1
+            logger.info('Opencode turn %d/%d', turn_count, options.max_turns)
 
         part = data.get('part')
         if isinstance(part, dict):
@@ -320,11 +381,42 @@ async def _run_opencode(options: BackendRunOptions) -> BackendRunResult:
 
 
 async def run_backend(options: BackendRunOptions) -> BackendRunResult:
-    if options.backend == 'claude':
-        return await _run_claude(options)
-    if options.backend == 'codex':
-        return await _run_codex(options)
-    return await _run_opencode(options)
+    run_id = f"{options.backend}-{int(time.time() * 1000)}"
+    _START_TIME[run_id] = time.monotonic()
+    logger.info(
+        '[%s] Starting backend=%s, cwd=%s, max_turns=%d, permission_mode=%s, resume=%s',
+        run_id,
+        options.backend,
+        options.cwd,
+        options.max_turns,
+        options.permission_mode,
+        options.resume_session_id,
+    )
+    try:
+        if options.backend == 'claude':
+            result = await _run_claude(options)
+        elif options.backend == 'codex':
+            result = await _run_codex(options)
+        else:
+            result = await _run_opencode(options)
+
+        elapsed = time.monotonic() - _START_TIME.get(run_id, 0)
+        logger.info(
+            '[%s] Completed backend=%s ok=%s stop_reason=%s session_id=%s elapsed=%.2fs',
+            run_id,
+            options.backend,
+            result.ok,
+            result.stop_reason,
+            result.session_id,
+            elapsed,
+        )
+        del _START_TIME[run_id]
+        return result
+    except Exception as e:
+        elapsed = time.monotonic() - _START_TIME.get(run_id, 0)
+        logger.exception('[%s] Unexpected error in run_backend: %s (elapsed=%.2fs)', run_id, e, elapsed)
+        del _START_TIME[run_id]
+        raise
 
 
 def get_default_cwd() -> Path:
@@ -332,4 +424,14 @@ def get_default_cwd() -> Path:
 
 
 def run_sync(options: BackendRunOptions) -> BackendRunResult:
-    return asyncio.run(run_backend(options))
+    logger.info('run_sync started: backend=%s', options.backend)
+    result = asyncio.run(run_backend(options))
+    logger.info(
+        'run_sync result: backend=%s ok=%s stop_reason=%s session_id=%s text_len=%d',
+        options.backend,
+        result.ok,
+        result.stop_reason,
+        result.session_id,
+        len(result.text),
+    )
+    return result
