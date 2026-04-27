@@ -930,12 +930,15 @@ conditions), followed by command, options, requirements, and examples.
 | [download-file](.agents/skills/download-file/SKILL.md) | `npm run download-file` | Download files with progress tracking |
 | [grounding-dino](.agents/skills/grounding-dino/SKILL.md) | `npm run grounding-dino` | Text-guided object detection (Grounding DINO on Replicate) |
 | [generate-video](.agents/skills/generate-video/SKILL.md) | `npm run generate-video` | AI video generation via Replicate (Kling, MiniMax, etc.) |
+| [seedream-4](.agents/skills/seedream-4/SKILL.md) | `npm run seedream-4` | Text-to-image generation with ByteDance Seedream-4 via Replicate |
+| [emoji-generator](.agents/skills/emoji-generator/SKILL.md) | `npm run emoji-generator` | Generate custom emoji-style images via Replicate |
 | [qwen3-tts](.agents/skills/qwen3-tts/SKILL.md) | `npm run qwen3-tts` | Text-to-speech with voice/clone/design modes |
 | [play-audio](.agents/skills/play-audio/SKILL.md) | `npm run play-audio` | Play audio files via system player |
 | [sprite-animator](.agents/skills/sprite-animator/SKILL.md) | `npm run sprite-animator` | Generate sprite animation frames for games |
 | [github-cli](.agents/skills/github-cli/SKILL.md) | `npm run github` | GitHub PRs, issues, releases, repos, workflows |
 | [data-indexing](.agents/skills/data-indexing/SKILL.md) | `npm run data-indexing` | Index documents into ChromaDB for semantic search |
 | [semantic-search](.agents/skills/semantic-search/SKILL.md) | `npm run semantic-search` | Vector search over ChromaDB-indexed documents |
+| [soccer-favorites](.agents/skills/soccer-favorites/SKILL.md) | `npm run soccer-favorites` | Store and retrieve favorite soccer players with RAG and SQLite database |
 | [google-search](.agents/skills/google-search/SKILL.md) | `npm run google-search` | Real-time Google Search via Gemini grounding |
 | [datetime](.agents/skills/datetime/SKILL.md) | `npm run datetime` | Current date/time in various formats and timezones |
 | [coding-preferences](.agents/skills/coding-preferences/SKILL.md) | `npm run coding-preferences` | Store and retrieve personal coding preferences (SQLite in skill folder) |

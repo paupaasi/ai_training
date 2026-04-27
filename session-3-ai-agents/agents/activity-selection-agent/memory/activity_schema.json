@@ -1,0 +1,206 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Activity",
+  "description": "Schema for a family-friendly activity record",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique activity identifier"
+    },
+    "name": {
+      "type": "string",
+      "description": "Activity name"
+    },
+    "city": {
+      "type": "string",
+      "description": "City where activity is located"
+    },
+    "country": {
+      "type": "string",
+      "description": "Country code (e.g., FI, US, SE)"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "playground",
+        "museum",
+        "zoo",
+        "swimming",
+        "nature",
+        "restaurant",
+        "show",
+        "sports",
+        "crafts",
+        "library",
+        "park",
+        "indoor_play",
+        "farm",
+        "amusement_park",
+        "other"
+      ],
+      "description": "Activity category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Activity description"
+    },
+    "website": {
+      "type": "string",
+      "format": "uri",
+      "description": "Activity website URL"
+    },
+    "address": {
+      "type": "string",
+      "description": "Physical address"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone number"
+    },
+    "google_maps_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "Google Maps URL"
+    },
+    "cost_info": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["free", "paid", "variable"],
+          "description": "Cost type"
+        },
+        "price_range": {
+          "type": "string",
+          "description": "Price range for adults (e.g., '€5-10')"
+        },
+        "child_price": {
+          "type": "string",
+          "description": "Specific child pricing"
+        },
+        "family_deal": {
+          "type": "string",
+          "description": "Family package or bulk pricing"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency code (e.g., EUR, USD)"
+        }
+      },
+      "description": "Pricing information"
+    },
+    "opening_hours": {
+      "type": "object",
+      "properties": {
+        "monday": {"type": "string", "description": "e.g., '09:00-17:00' or 'closed'"},
+        "tuesday": {"type": "string"},
+        "wednesday": {"type": "string"},
+        "thursday": {"type": "string"},
+        "friday": {"type": "string"},
+        "saturday": {"type": "string"},
+        "sunday": {"type": "string"},
+        "notes": {"type": "string", "description": "Special hours, seasonal variations, etc."}
+      },
+      "description": "Weekly opening hours"
+    },
+    "age_suitability": {
+      "type": "object",
+      "properties": {
+        "min_age": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Minimum recommended age in years"
+        },
+        "max_age": {
+          "type": "integer",
+          "description": "Maximum recommended age in years"
+        },
+        "toddler_friendly": {
+          "type": "boolean",
+          "description": "Suitable for toddlers (0-3 years)"
+        },
+        "best_age_range": {
+          "type": "string",
+          "description": "Optimal age range description"
+        }
+      },
+      "description": "Age recommendations"
+    },
+    "indoor_outdoor": {
+      "type": "string",
+      "enum": ["indoor", "outdoor", "both"],
+      "description": "Whether activity is indoors, outdoors, or both"
+    },
+    "duration_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Typical activity duration in minutes"
+    },
+    "stroller_friendly": {
+      "type": "boolean",
+      "description": "Activity is accessible with a stroller"
+    },
+    "child_facilities": {
+      "type": "object",
+      "properties": {
+        "changing_table": {"type": "boolean"},
+        "nursing_room": {"type": "boolean"},
+        "high_chair": {"type": "boolean"},
+        "cafe": {"type": "boolean"},
+        "toilet": {"type": "boolean"},
+        "hand_wash": {"type": "boolean"},
+        "parking": {"type": "boolean"},
+        "wheelchair_accessible": {"type": "boolean"}
+      },
+      "description": "Available child-friendly facilities"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "User rating (0-5 stars)"
+    },
+    "user_notes": {
+      "type": "string",
+      "description": "User's personal notes about the activity"
+    },
+    "visit_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of last visit (YYYY-MM-DD)"
+    },
+    "visit_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of times family has visited"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["new", "enriched", "visited", "favorite", "skipped"],
+      "description": "Activity status"
+    },
+    "source": {
+      "type": "string",
+      "description": "How we found this activity"
+    },
+    "raw_data": {
+      "type": "object",
+      "description": "Full raw data from search/enrichment"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "enriched_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When activity was last enriched with details"
+    }
+  },
+  "required": ["id", "name", "city", "country", "category"]
+}

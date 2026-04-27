@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Family Profile",
+  "description": "Schema for defining family preferences and composition",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of this family profile"
+    },
+    "family_members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "role": {
+            "type": "string",
+            "enum": ["parent", "child"],
+            "description": "Family member role"
+          },
+          "age": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 120,
+            "description": "Age in years"
+          }
+        },
+        "required": ["name", "role", "age"]
+      },
+      "description": "Family members and their ages"
+    },
+    "home_city": {
+      "type": "string",
+      "description": "Primary city where family is based"
+    },
+    "home_country": {
+      "type": "string",
+      "description": "Country code (e.g., FI, US, SE)"
+    },
+    "preferred_categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Preferred activity categories",
+      "examples": [["playground", "museum", "swimming", "nature"]]
+    },
+    "budget_preference": {
+      "type": "string",
+      "enum": ["free", "budget", "moderate", "any"],
+      "description": "Budget level for activities"
+    },
+    "accessibility_needs": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Accessibility requirements",
+      "examples": [["stroller_friendly", "wheelchair_accessible", "parking_nearby"]]
+    },
+    "transport_mode": {
+      "type": "string",
+      "enum": ["car", "public_transit", "walking", "any"],
+      "description": "Preferred transport mode to activities"
+    },
+    "max_travel_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum acceptable travel time in minutes"
+    },
+    "excluded_categories": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Activity categories to avoid"
+    },
+    "dietary_notes": {
+      "type": "string",
+      "description": "Dietary restrictions or preferences (for restaurant activities)"
+    },
+    "indoor_outdoor_preference": {
+      "type": "string",
+      "enum": ["indoor", "outdoor", "both"],
+      "description": "Weather-based activity preference"
+    },
+    "min_child_age": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Minimum age for activity recommendations (e.g., 2 for toddlers)"
+    },
+    "max_activity_duration_minutes": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Maximum activity duration (attention span consideration)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["name", "family_members", "home_city", "home_country", "min_child_age"]
+}
