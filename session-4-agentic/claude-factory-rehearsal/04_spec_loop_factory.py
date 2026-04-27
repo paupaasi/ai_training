@@ -33,6 +33,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help='Override spec max_iterations',
     )
+    parser.add_argument(
+        '--timeout',
+        type=int,
+        default=180,
+        help='Agent timeout in seconds (default: 180)',
+    )
     return parser.parse_args()
 
 
@@ -46,13 +52,13 @@ def load_spec(path: Path) -> dict[str, Any]:
 
 
 def resolve_python_cmd() -> str:
-    uv_path = subprocess.run(
-        ['bash', '-lc', 'command -v uv'],
+    uv_probe = subprocess.run(
+        ['bash', '-lc', "command -v uv >/dev/null 2>&1 && uv run python -c \"print('ok')\""],
         capture_output=True,
         text=True,
         check=False,
     )
-    if uv_path.returncode == 0 and uv_path.stdout.strip():
+    if uv_probe.returncode == 0:
         return 'uv run python'
     return 'python3'
 
@@ -146,8 +152,8 @@ def is_review_approved(text: str) -> bool:
     return 'FINAL_STATUS: APPROVED' in normalized
 
 
-def run_loop(spec: dict[str, Any], backend: Backend, max_iterations: int) -> int:
-    cwd = get_default_cwd()
+def run_loop(spec: dict[str, Any], backend: Backend, max_iterations: int, spec_dir: Path, timeout: int) -> int:
+    cwd = spec_dir
     python_cmd = resolve_python_cmd()
     allowed_tools = list(
         spec.get('allowed_tools', ['Read', 'Glob', 'Grep', 'Edit', 'Bash'])
@@ -155,6 +161,7 @@ def run_loop(spec: dict[str, Any], backend: Backend, max_iterations: int) -> int
     permission_mode = str(spec.get('permission_mode', 'acceptEdits'))
     agent_max_turns = int(spec.get('agent_max_turns', 20))
     model = spec.get('model')
+    agent_timeout = int(spec.get('agent_timeout_seconds', timeout))
     session_id: str | None = None
 
     failed_checks: list[CheckResult] = []
@@ -177,6 +184,7 @@ def run_loop(spec: dict[str, Any], backend: Backend, max_iterations: int) -> int
                 max_turns=agent_max_turns,
                 resume_session_id=session_id,
                 model=model,
+                timeout_seconds=agent_timeout,
             )
         )
         if not implement_result.ok:
@@ -212,6 +220,7 @@ def run_loop(spec: dict[str, Any], backend: Backend, max_iterations: int) -> int
                 max_turns=max(10, agent_max_turns // 2),
                 resume_session_id=session_id,
                 model=model,
+                timeout_seconds=agent_timeout,
             )
         )
         if not review_result.ok:
@@ -245,6 +254,8 @@ def main() -> None:
         spec=spec,
         backend=args.backend,
         max_iterations=max_iterations,
+        spec_dir=spec_path.parent,
+        timeout=args.timeout,
     )
     raise SystemExit(exit_code)
 

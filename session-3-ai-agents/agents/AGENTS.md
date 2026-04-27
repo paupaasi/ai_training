@@ -221,6 +221,9 @@ Register new agents by creating their folder structure. The framework automatica
 | Agent | Description | Status |
 |-------|-------------|--------|
 | `prospecting-agent` | B2B prospect search and enrichment | Active |
+| `lunch-selection-agent` | Restaurant discovery, menu extraction, and personalized lunch recommendations | Active |
+| `tes-agent` | Finnish collective bargaining agreement (TES) indexing, comparison, and salary calculation | Active |
+| `holiday-planner` | Family holiday planning - understands whole family wishes, recommends and compares destinations | Active |
 
 ---
 
