@@ -1,0 +1,34 @@
+{
+  "squad": {
+    "type": "object",
+    "properties": {
+      "players": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "List of player names in the squad"
+      },
+      "saved_at": {
+        "type": "string",
+        "description": "Timestamp when squad was saved"
+      }
+    }
+  },
+  "preferences": {
+    "type": "object",
+    "properties": {
+      "budget": {
+        "type": "number",
+        "description": "Transfer budget in millions"
+      },
+      "preferred_formation": {
+        "type": "string",
+        "description": "Preferred formation"
+      },
+      "chips_available": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "Chips still available"
+      }
+    }
+  }
+}
